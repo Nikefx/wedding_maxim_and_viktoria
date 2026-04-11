@@ -208,7 +208,7 @@
                     </div>
                     <div class="ms-auto d-flex align-items-center">
                       <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="checkbox" name="with_children" id="children_yes" value="да" >
+                        <input class="form-check-input" type="checkbox" name="with_children" id="children_yes" value="да">
                         <label class="form-check-label map-card__title fade-in-scroll" for="children_yes">Да</label>
                       </div>
 
@@ -223,13 +223,13 @@
 
                 <!-- Транспорт от ЗАГСа до ресторана -->
                 <div class="row">
-                  <div class="col-12 mb-3 d-flex align-items-center justify-col-12t">
+                  <div class="col-12 mb-3 d-flex align-items-center justify-content-between">
                     <div class="me-3">
                       <span class="map-card__title fade-in-scroll">3. Нужен ли трансфер от ЗАГСа до ресторана?</span>
                     </div>
                     <div class="ms-auto d-flex align-items-center">
                       <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="checkbox" name="transfer" id="transfer_yes" value="да" >
+                        <input class="form-check-input" type="checkbox" name="transfer" id="transfer_yes" value="да">
                         <label class="form-check-label map-card__title fade-in-scroll" for="transfer_yes">Да</label>
                       </div>
 
@@ -242,6 +242,26 @@
                   </div>
                 </div>
 
+                <!-- Предпочтения по алкоголю (последний вопрос) -->
+                <div class="row">
+                  <div class="col-12 mb-3">
+                    <div class="form-group">
+                      <label class="form-group map-card__title fade-in-scroll" for="alcohol_preference">
+                        4. Ваши предпочтения по алкоголю (что любите пить)
+                      </label>
+                      <input
+                      class="form-control form-input feed-in"
+                      type="text"
+                      id="alcohol_preference"
+                      name="alcohol_preference"
+                      placeholder="Например: вино, шампанское, без алкоголя"
+                    >
+                      <div class="invalid-feedback fade-in-scroll">Укажите ваши предпочтения по алкоголю или напишите «без алкоголя»</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Кнопка отправки -->
                 <div class="row justify-content-center">
                   <div class="col-12 col-lg-6">
                     <button type="submit" class="btn layone-but form-btn block-center but-feed w-100" id="submitBtn">
@@ -467,74 +487,100 @@
       emailjs.init("b2iS4hgWVEFM2XgKW"); // замените на свой
     })();
   </script>
+
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const form = document.getElementById("feedbackForm");
+    document.addEventListener("DOMContentLoaded", function () {
+      const form = document.getElementById("feedbackForm");
 
-    // Группы чекбоксов
-    const groups = [
-      { yes: "attendance_yes", no: "attendance_no" },
-      { yes: "children_yes", no: "children_no" },
-      { yes: "transfer_yes", no: "transfer_no" },
-    ];
+      // Группы чекбоксов
+      const groups = [
+        { yes: "attendance_yes", no: "attendance_no" },
+        { yes: "children_yes", no: "children_no" },
+        { yes: "transfer_yes", no: "transfer_no" },
+      ];
 
-    groups.forEach((group) => {
-      const yesCheckbox = document.getElementById(group.yes);
-      const noCheckbox = document.getElementById(group.no);
+      // Логика «да / нет» для чекбоксов
+      groups.forEach((group) => {
+        const yesCheckbox = document.getElementById(group.yes);
+        const noCheckbox = document.getElementById(group.no);
 
-      function disableOpposite(checkedEl, oppositeEl) {
-        if (checkedEl.checked) {
-          oppositeEl.checked = false;
+        function disableOpposite(checkedEl, oppositeEl) {
+          if (checkedEl.checked) {
+            oppositeEl.checked = false;
+          }
         }
-      }
 
-      yesCheckbox.addEventListener("change", () => {
-        disableOpposite(yesCheckbox, noCheckbox);
+        yesCheckbox.addEventListener("change", () => {
+          disableOpposite(yesCheckbox, noCheckbox);
+        });
+
+        noCheckbox.addEventListener("change", () => {
+          disableOpposite(noCheckbox, yesCheckbox);
+        });
       });
 
-      noCheckbox.addEventListener("change", () => {
-        disableOpposite(noCheckbox, yesCheckbox);
-      });
-    });
+      // Адресуем поле по алкоголю (опционально: можно добавить валидацию)
+      const alcoholInput = document.getElementById("alcohol_preference");
 
-    // Отправка формы через EmailJS
-    form.addEventListener("submit", function (e) {
-      console.log("📝 Форма: submit сработал");
-      e.preventDefault();
-
-      if (!this.checkValidity()) {
-        console.log("❌ Валидация не прошла");
-        this.classList.add("was-validated");
-        return;
+      // При необходимости можно вручную проверить поле
+      // (например, если в будущем захочешь добавить свои правила)
+      function validateAlcohol() {
+        // Если поле необязательное — можно всегда возвращать true
+        return true; // или логику на твоё усмотрение
       }
 
-      console.log("📧 Начинаю отправку через EmailJS...");
-      emailjs
-        .sendForm(
-          "service_honp18v",
-          "template_kdf5dtw",
-          this,
-          {
-            publicKey: "b2iS4hgWVEFM2XgKW",
-          }
-        )
-        .then(
-          function (response) {
-            console.log("✅ SUCCESS:", response);
-            alert("Ваш ответ отправлен, спасибо!");
-            form.reset();
-            groups.forEach((g) => {
-              document.getElementById(g.yes).checked = false;
-              document.getElementById(g.no).checked = false;
-            });
-          },
-          function (error) {
-            console.log("❌ ERROR:", error);
-            alert("Не удалось отправить ответ. Попробуйте позже.");
-          }
-        );
+      // Отправка формы через EmailJS
+      form.addEventListener("submit", function (e) {
+        console.log("📝 Форма: submit сработал");
+
+        // Логируем алкоголь
+        const alcohol = alcoholInput ? alcoholInput.value : "";
+        console.log("🥂 Предпочтение по алкоголю:", alcohol || "не указано");
+
+        e.preventDefault();
+
+        if (!this.checkValidity() || !validateAlcohol()) {
+          console.log("❌ Валидация не прошла");
+          this.classList.add("was-validated");
+          return;
+        }
+
+        console.log("📧 Начинаю отправку через EmailJS...");
+        emailjs
+          .sendForm(
+            "service_honp18v", // ваш сервис
+            "template_kdf5dtw", // ваш шаблон
+            this,
+            {
+              publicKey: "b2iS4hgWVEFM2XgKW",
+            }
+          )
+          .then(
+            function (response) {
+              console.log("✅ SUCCESS:", response);
+              alert("Ваш ответ отправлен, спасибо!");
+              form.reset();
+
+              // Сбрасываем чекбоксы «да/нет»
+              groups.forEach((g) => {
+                const yes = document.getElementById(g.yes);
+                const no = document.getElementById(g.no);
+                if (yes) yes.checked = false;
+                if (no) no.checked = false;
+              });
+
+              // При необходимости очистить поле алкоголя
+              if (alcoholInput) {
+                alcoholInput.value = "";
+              }
+            },
+            function (error) {
+              console.log("❌ ERROR:", error);
+              alert("Не удалось отправить ответ. Попробуйте позже.");
+            }
+          );
+      });
     });
-  });
   </script>
   <script>
   document.addEventListener('DOMContentLoaded', function() {
